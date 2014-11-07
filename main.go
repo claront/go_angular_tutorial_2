@@ -8,30 +8,37 @@ import (
 	"net/http"
 )
 
-func wsHandler(w http.ResponseWriter, r *http.Request) {
-	// Taken from gorilla's website
-	conn, err := websocket.Upgrade(w, r, nil, 1024, 1024)
-	if _, ok := err.(websocket.HandshakeError); ok {
-		http.Error(w, "Not a websocket handshake", 400)
-		return
-	} else if err != nil {
-		log.Println(err)
-		return
-	}
-	log.Println("Succesfully upgraded connection")
-	//connections[conn] = true
+var connections map[*websocket.Conn]bool
 
-	for {
-		// Blocks until a message is read
-		_, msg, err := conn.ReadMessage()
-		if err != nil {
-			//delete(connections, conn)
-			conn.Close()
+func sendAll(msg []byte){
+	for conn := range connections {
+		if err := conn.WriteMessage(websocket.TextMessage, msg); err != nil{
+			delete(connections, conn)
 			return
 		}
-		log.Println(string(msg))
-		//sendAll(msg)
 	}
+}
+
+func wsHandler(w http.ResponseWriter, r *http.Request) {
+	// Taken from gorilla's website
+    conn, err := websocket.Upgrade(w, r, nil, 1024, 1024)
+    if _, ok := err.(websocket.HandshakeError); ok {
+        http.Error(w, "Not a websocket handshake", 400)
+        return
+    } else if err != nil {
+        log.Println(err)
+        return
+    }
+    defer conn.Close()
+    connections[conn] = true
+    for {
+    	_, msg, err := conn.ReadMessage()
+    	if err != nil {
+    		return
+    	}
+    	log.Println(string(msg))
+    	sendAll(msg)
+    }
 }
 
 func main() {
@@ -40,6 +47,8 @@ func main() {
 	port := flag.Int("port", 8123, "port to serve on")
 	dir := flag.String("directory", "web/", "directory of web files")
 	flag.Parse()
+
+	connections = make(map[*websocket.Conn]bool)
 
 	// handle all requests by serving a file of the same name
 	fs := http.Dir(*dir)

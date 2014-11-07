@@ -8,13 +8,15 @@
 	<div class="jumbotron">
 		<h1>Chat</h1>
 	</div>
-	{{messages}}
-		<input type="text" placeholder="type here" ng-model="msg"><button class="btn btn.primary" on-click="send()">Send</button>
+	<ul>
+		<li ng-repeat="m in messages">{{m}}</li>
+	</ul>
+		<input type="text" placeholder="type here" ng-model="msg"><button class="btn btn.primary" ng-click="send()">Send</button>
 <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.3/angular.min.js"></script>
 <script>
 	var app = angular.module("chat", []);
 
-	app.controller("MainCtl", ["Scope", function($scope){
+	app.controller("MainCtl", ["$scope", function($scope){
 		$scope.messages = [];
 
 		var conn = new WebSocket("ws://localhost:8123/ws");
