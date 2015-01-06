@@ -9,7 +9,7 @@
 		<h1>Chat</h1>
 	</div>
 	<ul>
-		<li ng-repeat="m in messages">{{m}}</li>
+		<li ng-repeat="m in messages track by $index">{{m}}</li>
 	</ul>
 		<input type="text" placeholder="type here" ng-model="msg"><button class="btn btn.primary" ng-click="send()">Send</button>
 <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.3/angular.min.js"></script>
